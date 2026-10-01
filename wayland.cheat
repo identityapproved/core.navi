@@ -1,0 +1,4 @@
+% wayland, clipboard, wl-clipboard
+
+# Empty the clipboard
+wl-copy </dev/null

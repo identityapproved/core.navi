@@ -1,0 +1,32 @@
+% portage, gentoo, equery
+
+# Files a package installed, full list
+equery f <package>
+
+# Which package owns this file
+equery b <file>
+
+# Search installed packages by name
+equery l <pattern>
+
+# Reverse dependencies, what needs this package
+equery d <package>
+
+# USE flags enabled for a package
+equery u <package>
+
+# Disk size of an installed package
+equery s <package>
+
+# Rebuild packages with broken library links
+doas revdep-rebuild
+
+# Clean old distfiles out of the package cache
+doas eclean distfiles
+
+# Refresh the eix index after a sync
+doas eix-update
+
+; qlist (portage-utils) is the fast path; the vdb fallback keeps the picker
+; working on a host without portage-utils installed
+$ package: qlist -IC 2>/dev/null || ls -d /var/db/pkg/*/* | sed -E 's|^/var/db/pkg/||; s/-[0-9][^-]*(-r[0-9]+)?$//'

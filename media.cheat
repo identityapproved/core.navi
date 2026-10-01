@@ -1,0 +1,4 @@
+% media, mpv, playlist
+
+# Play a directory as a sorted mpv playlist
+find . -type d | fzf | xargs -I{} find "{}" -type f | sort -V | mpv --playlist=-

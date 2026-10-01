@@ -1,0 +1,4 @@
+% disk, block, lsblk
+
+# Block devices with filesystem, label and UUID
+lsblk -o NAME,SIZE,FSTYPE,LABEL,UUID,MOUNTPOINT,MODEL

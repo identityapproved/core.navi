@@ -1,0 +1,26 @@
+% netspeed, network, curl
+
+# Download speed, single stream, Mbit/s
+curl -o /dev/null -w '%{speed_download}\n' https://<mirror>-speed.hetzner.com/<size>.bin | awk '{printf "down: %.1f Mbit/s\n", $1/125000}'
+
+# Download speed, 4 parallel streams, aggregate Mbit/s
+for i in 1 2 3 4; do curl -o /dev/null -s -w '%{speed_download}\n' https://<mirror>-speed.hetzner.com/<size>.bin & done | awk '{s+=$1} END {printf "aggregate: %.1f Mbit/s\n", s/125000}'
+
+# Latency breakdown to a mirror, 1-byte range request, no payload
+curl -o /dev/null -sS -r 0-0 -w 'dns: %{time_namelookup}s  connect: %{time_connect}s  tls: %{time_appconnect}s  ttfb: %{time_starttransfer}s\n' https://<mirror>-speed.hetzner.com/100MB.bin
+
+# Which Cloudflare edge serves me, and its RTT in microseconds
+curl -sS -D - -o /dev/null 'https://speed.cloudflare.com/__down?bytes=1' | grep -Ei 'cf-ray|min_rtt'
+
+# Link speed, NIC negotiated rate, Mbit/s
+printf '%s: %s Mbit/s\n' <iface> "$(cat /sys/class/net/<iface>/speed)"
+
+# Link speed of every physical NIC
+for i in /sys/class/net/*/device; do n=$(basename "$(dirname "$i")"); printf '%-12s %s Mbit/s\n' "$n" "$(cat /sys/class/net/$n/speed 2>/dev/null || echo n/a)"; done
+
+; -1 means the link is down or the speed is not reportable; virtual devices
+; (bridges, wg, tailscale, lo) have no meaningful value and are excluded
+
+$ iface: for i in /sys/class/net/*/device; do basename "$(dirname "$i")"; done
+$ mirror: printf 'hel1  Helsinki FI\nfsn1  Falkenstein DE\nnbg1  Nuremberg DE\nash   Ashburn US-East\nhil   Hillsboro US-West\nsin   Singapore SG\n' --- --column 1
+$ size: printf '1GB    best steady-state figure\n100MB  quick check, understates fast links\n10GB   multi-gig links only\n' --- --column 1

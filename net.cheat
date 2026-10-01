@@ -1,0 +1,10 @@
+% net, network, inspect
+
+# Listening ports with process names
+ss -tulpen
+
+# Local IP addresses, one line per interface
+ip -br a
+
+# Scan for nearby wifi networks
+nmcli dev wifi list
