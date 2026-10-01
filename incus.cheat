@@ -1,0 +1,167 @@
+% incus, container, lxc, nixos
+
+# Instances with state, addresses and snapshot count
+doas incus list
+
+# Instance names only, one per line
+doas incus list -c n --format csv
+
+# Running containers only
+doas incus list type=container status=running
+
+# Everything about one instance: devices, addresses, state, snapshots
+doas incus info <instance>
+
+# Live resource usage per instance
+doas incus top
+
+# Start an instance that is not running
+doas incus start <instance>
+
+# Stop an instance, waiting for a clean shutdown
+doas incus stop <instance>
+
+# Stop an instance that will not shut down cleanly
+doas incus stop -f <instance>
+
+# Restart an instance
+doas incus restart <instance>
+
+# Freeze a running instance's processes in place
+doas incus pause <instance>
+
+# Thaw a frozen instance
+doas incus resume <instance>
+
+# Push one file into an instance
+doas incus file push <file> <instance>/<target_path>
+
+# Push a repo into an instance, recursively (trailing slash: into that dir)
+doas incus file push -r $HOME/github/<repo> <instance>/root/
+
+# Push, creating any missing parent directories on the way
+doas incus file push -p -r $HOME/github/<repo> <instance>/<target_path>/
+
+# Push stdin into a file inside the instance
+printf '%s\n' '<content>' | doas incus file push - <instance>/<target_path>
+
+# Push with explicit ownership and mode inside the instance
+doas incus file push --uid 0 --gid 0 --mode 600 <file> <instance>/<target_path>
+
+# Pull a file out of an instance into the current directory
+doas incus file pull <instance>/<target_path> .
+
+# Pull a file straight to stdout, no temp file
+doas incus file pull <instance>/<target_path> -
+
+# Pull a directory out, recursively
+doas incus file pull -r <instance>/<target_path> .
+
+# Edit a file inside an instance in $EDITOR
+doas incus file edit <instance>/<target_path>
+
+# Delete a file inside an instance
+doas incus file delete <instance>/<target_path>
+
+# Mount part of an instance's filesystem on the host over SFTP
+doas incus file mount <instance>/<target_path> <mountpoint>
+
+# Run a command in an instance (execve, so no globs, pipes or redirects)
+doas incus exec <instance> -- <command>
+
+# Run a command that needs a shell: pipes, globs, redirects, cd
+doas incus exec <instance> -- sh -c "<command>"
+
+# Interactive root shell in an instance
+doas incus exec <instance> -- bash
+
+# Shell as the unprivileged user, with their login environment
+doas incus exec <instance> -- su - <user>
+
+# Run as a given uid/gid in a given directory
+doas incus exec <instance> --user 1000 --group 100 --cwd /home/<user> -- <command>
+
+# Run without a pty, for scripts and pipelines
+doas incus exec <instance> -T -- <command>
+
+# Set the user's password after a first deploy
+doas incus exec <instance> -- passwd <user>
+
+# NixOS: switch the instance to the flake pushed under /root
+doas incus exec <instance> -- nixos-rebuild switch --flake path:/root/<repo>#<instance>
+
+# NixOS: push the repo and switch, one line
+doas incus file push -r $HOME/github/<repo> <instance>/root/ && doas incus exec <instance> -- nixos-rebuild switch --flake path:/root/<repo>#<instance>
+
+# NixOS: build only, to see whether the config evaluates
+doas incus exec <instance> -- nixos-rebuild build --flake path:/root/<repo>#<instance>
+
+# NixOS: activate now but do not make it the boot default
+doas incus exec <instance> -- nixos-rebuild test --flake path:/root/<repo>#<instance>
+
+# NixOS: roll back to the previous generation
+doas incus exec <instance> -- nixos-rebuild switch --rollback
+
+# NixOS: list system generations
+doas incus exec <instance> -- nix-env --list-generations -p /nix/var/nix/profiles/system
+
+# NixOS: update the flake inputs inside the instance
+doas incus exec <instance> -- nix flake update --flake /root/<repo>
+
+# NixOS: collect garbage inside the instance
+doas incus exec <instance> -- nix-collect-garbage --delete-older-than 14d
+
+# Snapshot an instance
+doas incus snapshot create <instance> <snapshot>
+
+# List an instance's snapshots
+doas incus snapshot list <instance>
+
+# Restore a snapshot, discarding the current state
+doas incus snapshot restore <instance> <snapshot>
+
+# Delete a snapshot
+doas incus snapshot delete <instance> <snapshot>
+
+# Full config, devices and profiles of an instance
+doas incus config show <instance>
+
+# Config including everything inherited from profiles
+doas incus config show -e <instance>
+
+# Set a resource limit
+doas incus config set <instance> limits.memory=<size>
+
+# Share a host directory in (shift maps the ids for an unprivileged container)
+doas incus config device add <instance> <device> disk source=<host_path> path=<target_path> shift=true
+
+# Forward a host port to the same port inside the instance
+doas incus config device add <instance> <device> proxy listen=tcp:0.0.0.0:<port> connect=tcp:127.0.0.1:<port>
+
+# Remove a device again
+doas incus config device remove <instance> <device>
+
+# Container images available on the images: remote
+doas incus image list images: <distro>
+
+# Create a new container from an image and bring it up
+doas incus launch <image> <instance>
+
+# Delete an instance and its snapshots, even while it runs
+doas incus delete -f <instance>
+
+; exec runs execve directly, so a pipe, glob or > in the command line is eaten
+; by the local shell and never reaches the instance - wrap those in sh -c "..."
+;
+; file push -r <dir> <instance>/<path>/ copies the directory *into* <path>, and
+; it never deletes: a file removed locally stays in the instance until it is
+; removed there too, so for a flake a deleted module keeps being evaluated
+;
+; `incus rebuild` is not nixos-rebuild - it wipes the instance root disk and
+; re-initialises it from an image. Deliberately not listed above
+;
+; <instance> is typed, not picked: the daemon socket is root-only here, so a
+; completion source would have to run doas and prompt inside the picker
+
+$ repo: ls -d $HOME/github/*/ 2>/dev/null | xargs -n1 basename
+$ size: printf '512MiB\n1GiB\n2GiB\n4GiB\n8GiB\n'
