@@ -1,0 +1,193 @@
+% taskwarrior, task, todo
+
+# Every task in the store, completed and deleted included
+task all
+
+# Why tasks look missing: the filter the default report applies
+task show report.next.filter
+
+# Count the whole store, with no report filter at all
+task count
+
+# Pending tasks with nothing truncated by limit:page
+task list limit:none
+
+# Parked tasks, hidden until their wait date passes
+task waiting
+
+# Finished tasks
+task completed
+
+# Deleted tasks, still in the replica until purged
+task status:deleted all
+
+# Run one report with its own filter stripped off
+task rc.report.<report>.filter= <report>
+
+# Reports that exist, and the filter each one applies
+task reports
+
+# Store totals and per-status counts
+task stats
+
+# Add a task with a project and a tag
+task add "<desc>" project:<project> +<tag>
+
+# Add a task parked indefinitely, out of the way until pulled back
+task add "<desc>" project:<project> wait:someday
+
+# Add a task that is already finished
+task log "<desc>" project:<project>
+
+# Resolve what a named date actually means before relying on it
+task calc <date>
+
+# Change fields on an existing task
+task <id> modify project:<project> priority:<priority>
+
+# Add words onto the end of a description
+task <id> append "<desc>"
+
+# Clear fields by assigning nothing to them
+task <id> modify due: wait:
+
+# Full detail for one task: annotations, dates, urgency maths
+task <id> information
+
+# Open the raw task in the editor
+task <id> edit
+
+# Read one attribute, for scripts
+task _get <id>.uuid
+
+# Numeric ids matching a filter, comma separated
+task project:<project> ids
+
+# Mark a task done
+task <id> done
+
+# Start the timer on a task
+task <id> start
+
+# Stop the timer on a task
+task <id> stop
+
+# Tasks with a running timer
+task active
+
+# Delete a task, keeping it in the replica
+task <id> delete
+
+# Permanently remove a deleted task by uuid
+task <uuid> purge
+
+# Revert the last change
+task undo
+
+# Link a task to its note in the store, as the last annotation
+task <id> annotate '$HOME/taskwarrior/tasks/<note>'
+
+# Link a task to a line inside its note
+task <id> annotate '$HOME/taskwarrior/tasks/<note>:<line>'
+
+# Free-text annotation, added before the note link so the link stays last
+task <id> annotate "<desc>"
+
+# Drop an annotation by its exact text
+task <id> denotate "<desc>"
+
+# Open a task's note in the editor
+__twopen <id>
+
+# Pick any task note from a picker
+__twopen
+
+# Tasks in one project
+task project:<project> list
+
+# Tasks carrying a tag
+task +<tag> list
+
+# Tasks outside a project
+task project.not:<project> list
+
+# Find a word in task descriptions, across every status
+task description.has:<word> all
+
+# Match task descriptions against a regex, quoted so zsh keeps the slashes
+task '/<regex>/' all
+
+# Match either of two tags
+task '( +<tag> or +PRIORITY )' list
+
+# Projects with counts and completion percentage
+task summary
+
+# Tags in use, with counts
+task tags
+
+# Snapshot the whole store before any bulk change
+task export > $HOME/taskwarrior/task-backup-$(date +%Y%m%d-%H%M).json
+
+# Export one filter as JSON
+task project:<project> export
+
+# Import tasks back from a JSON export
+task import <file>
+
+# Where the data and the config actually live
+task show data.location
+
+# Grep the effective config for a setting
+task show <word>
+
+# Config, paths and versions for a bug report
+task diagnostics
+
+# Push and pull the replica against the git remote
+task sync
+
+; verified on g33nto 01.10.2026 against task 3.5.0, store ~/taskwarrior
+;
+; typing `task` alone and pressing ^G hits navi's --best-match path, which takes
+; the FIRST entry here whose tags, description or body match - and every entry
+; matches the bare word `task`. So the order of this file is load-bearing and
+; `task all` is first on purpose. Press ^G again on the unmodified line to get
+; the picker instead of the autoselect
+;
+; bare `task` runs default.command=next, whose filter is `+PENDING -WAITING
+; limit:page` - truncated to the terminal height AND parked tasks hidden. That
+; is the usual "where did my tasks go"; `task all` or `task count` is the answer
+;
+; a report name and a command cannot be combined: `task all description.has:x
+; count` parses `all` as a search word and prints "No matches". Use a filter
+; plus exactly one of them
+;
+; the filter comes before the command - `task <id> modify ...`, never
+; `task modify <id>`. `task add` takes no filter, so project:/+tag on that line
+; are modifiers being set, not a search
+;
+; exit status 1 with "No matches." is a filter result, not a syntax error. A
+; search that works under `all` and fails under `list` means the match is
+; waiting, completed or deleted
+;
+; `delete` and `purge` each prompt; purge only accepts an already-deleted task
+;
+; never edit task/taskchampion.sqlite3 by hand, the CLI is the only writer
+;
+; taskrc is chezmoi-managed at ~/github/lainland/home/dot_config/task/taskrc and
+; symlinked into ~/.config/task, so editing the repo file changes live config.
+; ~/.local/share/task/local.taskrc holds the sync encryption secret - keep that
+; file out of git and out of cheats
+;
+; `task sync` reaches the network and was not exercised when this was written
+
+$ report: task reports | awk 'NR>2 && $1 ~ /^[a-z]/ {print $1}'
+$ project: task _projects
+$ tag: task _tags | grep -vE '^[A-Z]+$'
+$ id: task status:pending export | jq -r '.[] | "\(.id)  \(.description)"' --- --column 1
+$ uuid: task status:deleted export | jq -r '.[] | "\(.uuid)  \(.description)"' --- --column 1
+$ note: cd $HOME/taskwarrior/tasks && find . -name '*.md' -printf '%P\n' | sort
+$ file: ls -1 $HOME/taskwarrior/task-backup-*.json 2>/dev/null | sort -r
+$ date: printf 'today\ntomorrow\neow\neom\neoy\nsomeday\n'
+$ priority: printf 'H\nM\nL\n'

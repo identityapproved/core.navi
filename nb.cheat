@@ -1,0 +1,199 @@
+% nb, notebook, notes, bookmarks
+
+# Open nb todos in the current notebook
+nb todos open
+
+# Closed nb todos, the same-day done records
+nb todos closed
+
+# Open nb todos in one notebook
+nb <notebook>:todos open
+
+# Open nb todos carrying a tag
+nb todos open --tags <tag>
+
+# Unchecked checkbox lines in the current notebook
+nb tasks open
+
+# Checkbox lines in one nb item
+nb tasks <todo>
+
+# Add a one-line nb todo
+nb todo add "<title>"
+
+# Add a one-line nb todo with tags
+nb todo add "<title>" --tags <tag>
+
+# Add a one-line nb todo to another notebook
+nb todo add <notebook>: "<title>"
+
+# Mark an nb todo done
+nb do <todo>
+
+# Mark one checkbox inside an nb todo done
+nb do <todo> <task_number>
+
+# Reopen an nb todo
+nb undo <todo>
+
+# Everything in one notebook, folders first
+nb ls <notebook>:
+
+# Notes only in a folder, no todos or bookmarks
+nb <notebook>:<folder>/ --type note
+
+# Pipe a command's output into a new nb note
+nb add
+
+# New nb note with a title and tags
+nb add --title "<title>" --tags <tag>
+
+# Full text search in the current notebook
+nb q "<query>"
+
+# Full text search across every notebook
+nb q --all "<query>"
+
+# Search every notebook by tag
+nb q --all --tag <tag>
+
+# Matching items as a plain id and title list, no excerpts
+nb q --all -l "<query>"
+
+# Tags already in use in one notebook
+nb <notebook>:list --tags
+
+# Print one nb item to stdout, no pager
+nb show <selector> --print
+
+# Path on disk of an nb item
+nb show <selector> --path
+
+# Filename of an nb item
+nb show <selector> --filename
+
+# Notebooks and the remote each one tracks
+nb notebooks
+
+# Notebook names alone, for scripts
+nb notebooks --names
+
+# Which notebook is current, and where it lives
+nb notebooks current --path
+
+# Switch the current notebook
+nb use <notebook>
+
+# Topic folders in the nb links notebook
+nb links:folders
+
+# Bookmark collections inside one links topic folder
+nb links:<topic>/ --type note
+
+# Tags already used for bookmarks, to keep them consistent
+nb links:list --tags
+
+# Check whether a URL is already bookmarked
+nb links:q "<url>"
+
+# Append a bookmark line to a links collection
+nb edit links:<collection> --content "- [<title>](<url>) - <why>."
+
+# Start a new bookmark collection in a links topic folder
+nb add links:<topic>/ --filename <subtopic>.md --title "<title>" --tags <topic>,<subtopic> --content $'<scope>\n\n## Links\n'
+
+# New topic folder in the links notebook
+nb folders add links:<topic>
+
+# Bookmark note saved without fetching the page
+nb bookmark links:<topic>/ "<url>" --no-request --title "<title>" --tags <tag> --comment "<why>"
+
+# Bookmark notes in the links notebook
+nb links:bookmark list
+
+# Rename an nb item, keeping it indexed and committed
+nb move <selector> <notebook>:<filename> --force
+
+# Copy an outside file into a notebook, indexed and committed
+nb import copy <file> <notebook>:
+
+# Delete an nb item, removing it from the index and committing
+nb delete <selector> --force
+
+# Uncommitted changes in the current notebook: exit 0 means dirty
+nb git dirty
+
+# Commit whatever is uncommitted in the current notebook
+nb git checkpoint "<message>"
+
+# Git log of one notebook, bypassing nb
+git -C $HOME/nb/<notebook> log --oneline -10
+
+# Effective nb environment, every NB_ variable
+nb env
+
+# Settings nb knows about, with their current values
+nb settings list --long
+
+# Push and pull every notebook against its remote
+nb sync --all
+
+; verified on g33nto 03.10.2026 against nb 7.25.4, store $HOME/nb
+;
+; store layout, per-notebook rules and the capture contract live in
+; $HOME/nb/AGENTS.md; the full workflow is the `nbflow` skill
+;
+; typing `nb` alone and pressing ^G hits navi's --best-match path, which takes
+; the FIRST entry whose tags, description or body match - and every body here
+; starts with `nb`. So order is load-bearing and `nb todos open` is first on
+; purpose. Press ^G again on the unmodified line to get the picker instead
+;
+; one known autoselect miss: `nb do` + ^G lands on `nb todos closed`, because
+; `do` fuzzy-matches inside `todos`. ^G again for the picker
+;
+; a selector is `<id>`, `<filename>`, `<notebook>:<id>`,
+; `<notebook>:<folder>/<filename>`. Use one instead of cd-ing into a notebook
+; directory; nearly every subcommand takes one
+;
+; `nb q` searches only the CURRENT notebook and exits 1 with "Not found in
+; home:" - the usual "my note is gone". `--all` searches every notebook, or
+; prefix the notebook: `nb links:q "<query>"`
+;
+; an nb todo is one line. `--description`, `--due` and `--task` exist but
+; belong to taskwarrior instead; reference the task from the single line as
+; [tw:<first 8 of its UUID>]. See the taskwarrior cheat
+;
+; nb colors its output even through a pipe and emits DECAWM sequences too, so
+; anything parsing it needs the sed below; there is no --no-color
+;
+; nb auto-commits each operation in the notebook's own git repo. Never hand-edit
+; .index, .pindex or .current - `nb move`, `nb delete` and `nb import` keep them
+; consistent, a plain mv or rm does not
+;
+; `nb import` uniquifies the filename against the CURRENT notebook, not the
+; target: importing AGENTS.md into links: while home: was current produced
+; AGENTS-1.md. Fix with `nb move`, or `nb use` the target first
+;
+; every non-dotfile in a notebook directory gets indexed as a note on the next
+; reconcile; only dotfiles, swap and backup files are ignored
+;
+; NB_AUTO_SYNC=0 on this host, so edits stay local until `nb sync --all`. That
+; one reaches the network and was not exercised here, nor was `nb use`, which
+; rewrites $HOME/nb/.current
+;
+; `nb open` launches a browser or file manager, `nb browse` a web UI; `nb show`
+; and `nb peek` stay in the terminal
+;
+; `nb bookmark` without --no-request fetches the page over the network. Only the
+; --no-request form is here
+;
+; no suggestion list for bookmark notes: the store has none yet, they are all
+; one-line entries inside collection notes
+
+$ notebook: nb notebooks --names | sed -E 's/\x1b\[[0-9;?]*[a-zA-Z]//g'
+$ todo: nb todos open | sed -E 's/\x1b\[[0-9;?]*[a-zA-Z]//g' | sed -E 's/^\[([0-9]+)\][[:space:]]*/\1  /' --- --column 1
+$ topic: nb links:folders | sed -E 's/\x1b\[[0-9;?]*[a-zA-Z]//g' | sed -E 's/^\[[^]]*\] [^ ]+ //'
+$ collection: cd $HOME/nb/links && find . -mindepth 2 -name '*.md' -printf '%P\n' | sort
+$ folder: nb <notebook>:folders | sed -E 's/\x1b\[[0-9;?]*[a-zA-Z]//g' | sed -E 's/^\[[^]]*\] [^ ]+ //'
+$ tag: { nb home:list --tags; nb links:list --tags; } 2>/dev/null | sed -E 's/\x1b\[[0-9;?]*[a-zA-Z]//g' | tr -d '#' | sort -u
+$ task_number: printf '1\n2\n3\n4\n5\n'

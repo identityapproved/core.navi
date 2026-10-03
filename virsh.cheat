@@ -1,0 +1,216 @@
+% virsh, libvirt, kvm, qemu, vm
+
+# Domains with id and state, running and defined
+virsh list --all
+
+# Domain names only, one per line
+virsh list --all --name
+
+# Running domains only
+virsh list --state-running
+
+# State of one domain
+virsh domstate <domain>
+
+# Everything about one domain: state, vcpus, memory, autostart, security
+virsh dominfo <domain>
+
+# Which libvirt URI this virsh is talking to
+virsh uri
+
+# Host CPU count, topology and memory as libvirt sees it
+virsh nodeinfo
+
+# Full XML definition of a domain
+virsh dumpxml <domain>
+
+# Edit a domain's XML in $EDITOR, validated on save
+virsh edit <domain>
+
+# Disks attached to a domain, with type and host path
+virsh domblklist <domain> --details
+
+# NICs attached to a domain, with MAC and source network
+virsh domiflist <domain>
+
+# Guest IP addresses from the libvirt DHCP leases
+virsh domifaddr <domain> --source lease
+
+# Guest IP addresses via the qemu guest agent
+virsh domifaddr <domain> --source agent
+
+# Guest IP addresses from the host ARP table
+virsh domifaddr <domain> --source arp
+
+# vCPU to host CPU placement and affinity
+virsh vcpuinfo <domain>
+
+# Start a defined domain
+virsh start <domain>
+
+# Start a domain and attach its serial console in one step
+virsh start <domain> --console
+
+# Clean ACPI shutdown
+virsh shutdown <domain>
+
+# Shut down through the guest agent when ACPI is ignored
+virsh shutdown <domain> --mode agent
+
+# Whether the guest agent is actually connected, before relying on it
+virsh qemu-agent-command <domain> '{"execute":"guest-ping"}'
+
+# Reboot a domain
+virsh reboot <domain>
+
+# Pull the power on a domain that will not shut down
+virsh destroy <domain>
+
+# Freeze a running domain's vCPUs in place
+virsh suspend <domain>
+
+# Thaw a suspended domain
+virsh resume <domain>
+
+# Save a domain's state to disk and power it off, resumed by the next start
+virsh managedsave <domain>
+
+# Mark a domain to boot with the host
+virsh autostart <domain>
+
+# Unmark a domain from booting with the host
+virsh autostart <domain> --disable
+
+# Attach the serial console, ^] detaches
+virsh console <domain>
+
+# Display address and port for a remote graphical viewer
+virsh domdisplay <domain>
+
+# Send ctrl-alt-del to a guest
+virsh send-key <domain> KEY_LEFTCTRL KEY_LEFTALT KEY_DELETE
+
+# Screenshot the domain console to a file
+virsh screenshot <domain> --file <path>
+
+# Domain snapshots, with creation time and state
+virsh snapshot-list <domain>
+
+# Snapshot a domain, disk and RAM
+virsh snapshot-create-as <domain> --name <snapshot> --description "<text>"
+
+# Disk-only domain snapshot of a running guest, no RAM, all disks or none
+virsh snapshot-create-as <domain> --name <snapshot> --disk-only --atomic
+
+# Revert a domain to a snapshot, discarding the current state
+virsh snapshot-revert <domain> <snapshot>
+
+# Delete a domain snapshot
+virsh snapshot-delete <domain> <snapshot>
+
+# Storage pools with state and autostart
+virsh pool-list --all
+
+# Volumes in a pool, with host paths
+virsh vol-list <pool>
+
+# Re-read a pool's directory after adding images by hand
+virsh pool-refresh <pool>
+
+# Create a qcow2 volume in a pool
+virsh vol-create-as <pool> <volume> <size> --format qcow2
+
+# Delete a volume
+virsh vol-delete <volume> <pool>
+
+# Grow a domain's disk, by target name, while it is defined
+virsh blockresize <domain> <target> <size>
+
+# Swap the ISO in a guest's cdrom drive
+virsh change-media <domain> <target> <path> --update --live
+
+# Eject whatever is in a guest's cdrom drive
+virsh change-media <domain> <target> --eject --live
+
+# Virtual networks with state and autostart
+virsh net-list --all
+
+# DHCP leases libvirt has handed out on a network
+virsh net-dhcp-leases <network>
+
+# Bring up a defined network
+virsh net-start <network>
+
+# Start a network on host boot
+virsh net-autostart <network>
+
+# Change memory now, lost on domain restart
+virsh setmem <domain> <size> --live
+
+# Change memory in the definition, applied on next boot
+virsh setmem <domain> <size> --config
+
+# Change vcpu count now, up to the domain's maximum
+virsh setvcpus <domain> <count> --live
+
+# Memory usage inside a domain, needs a balloon driver
+virsh dommemstat <domain>
+
+# Every counter libvirt has for a domain
+virsh domstats <domain>
+
+# Disk io counters for one target
+virsh domblkstat <domain> <target>
+
+# Network counters for one interface
+virsh domifstat <domain> <interface>
+
+# Remove a domain's definition, leaving its disks alone
+virsh undefine <domain>
+
+# Remove a domain and everything belonging to it
+virsh undefine <domain> --remove-all-storage --snapshots-metadata --nvram
+
+; verified against virsh 12.6.0 on this host; send-key names were validated
+; one key at a time, never as the ctrl-alt-del combination
+;
+; `virsh` is aliased to `virsh -c qemu:///system`, so the snippets above talk to
+; the system daemon with no URI on the line. The $ suggestion commands run under
+; bash, where that alias does not exist, so they spell the URI out
+;
+; the socket is reachable as this user, so no doas is needed - unlike incus
+;
+; shutdown is a request, not a command. It prints "Domain 'x' is being
+; shutdown" and exits 0 as soon as qemu has pressed the virtual power button,
+; whether or not anything in the guest is listening. A guest with no acpid
+; (OpenRC) and no logind just keeps running - check domstate, not the exit
+; code. Fix it inside the guest: rc-update add acpid default
+;
+; --mode agent needs qemu-guest-agent running in the guest, not just the
+; channel in the XML. dumpxml shows state='disconnected' on the
+; org.qemu.guest_agent.0 target when it is not, and guest-ping errors with
+; "QEMU guest agent is not connected"
+;
+; destroy is not delete: it stops the domain and leaves disks and definition
+; intact. undefine removes the definition, and only --remove-all-storage
+; touches the disks
+;
+; setmem --live is capped by the domain's maximum memory; raising that needs
+; setmaxmem --config and a full restart, so it is not a one-liner
+;
+; --source agent needs qemu-guest-agent running in the guest and a channel
+; device in the XML; --source lease only sees guests on a libvirt network with
+; libvirt's own dnsmasq
+;
+; blockresize takes the target name from domblklist, not a host path, and only
+; grows the backing file - the guest still has to grow its filesystem
+
+$ domain: virsh -c qemu:///system list --all --name | grep .
+$ snapshot: virsh -c qemu:///system snapshot-list "$domain" --name | grep .
+$ pool: virsh -c qemu:///system pool-list --all --name | grep .
+$ network: virsh -c qemu:///system net-list --all --name | grep .
+$ volume: virsh -c qemu:///system vol-list "$pool" --- --column 1 --header-lines 2
+$ target: virsh -c qemu:///system domblklist "$domain" --- --column 1 --header-lines 2
+$ interface: virsh -c qemu:///system domiflist "$domain" --- --column 1 --header-lines 2
+$ size: printf '1G\n2G\n4G\n8G\n16G\n32G\n'
+$ count: printf '1\n2\n4\n8\n12\n'
