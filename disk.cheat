@@ -2,3 +2,29 @@
 
 # Block devices with filesystem, label and UUID
 lsblk -o NAME,SIZE,FSTYPE,LABEL,UUID,MOUNTPOINT,MODEL
+
+# Mounted filesystems with type, used first (skip pseudo mounts)
+df -hT -x tmpfs -x devtmpfs | sort -k4 -hr
+
+# Mounted filesystems by percent used, fullest first
+df -h -x tmpfs -x devtmpfs | sort -k5 -hr
+
+# Total space used across real filesystems
+df -h --total -x tmpfs -x devtmpfs | tail -1
+
+# Inode usage per filesystem, fullest first
+df -ih -x tmpfs -x devtmpfs | sort -k5 -hr
+
+# Total size of a path
+du -sh <path>
+
+# Immediate subdirectory sizes under a path, largest first
+du -h -d1 <path> | sort -hr
+
+# Largest files and directories under a path, top N
+du -ah <path> | sort -hr | head -n <count>
+
+# Largest files only under a path, top N
+find <path> -type f -printf '%s\t%p\n' | sort -nr | head -n <count> | numfmt --field=1 --to=iec
+
+$ count: echo -e "10\n20\n50"

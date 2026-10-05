@@ -1,0 +1,78 @@
+% podman, container, oci
+
+# Running containers with image, status and ports
+podman ps --format "table {{.Names}} {{.Image}} {{.Status}} {{.Ports}}"
+
+# All containers, including stopped ones
+podman ps -a --format "table {{.Names}} {{.Image}} {{.Status}} {{.Ports}}"
+
+# Local images with size
+podman images --format "table {{.Repository}}:{{.Tag}} {{.Size}}"
+
+# Disk used by images, containers and volumes
+podman system df
+
+# Run a container in the background with a name and published port
+podman run -d --name <name> -p <host_port>:<container_port> <image>
+
+# Run an interactive throwaway shell, removed on exit
+podman run --rm -it <image> <shell>
+
+# Run with a bind mount and an environment variable
+podman run -d --name <name> -v <host_path>:<container_path> -e <key>=<value> <image>
+
+# Start a shell in a running container
+podman exec -it <container> <shell>
+
+# Run one command in a running container
+podman exec <container> <command>
+
+# Follow a container's logs
+podman logs -f <container>
+
+# Live resource usage per container
+podman stats
+
+# Published port mappings for a container
+podman port <container>
+
+# One field from a container's config via Go template
+podman inspect --format '{{<template>}}' <container>
+
+# Copy a file out of a container to the current directory
+podman cp <container>:<container_path> .
+
+# Copy a file from the host into a container
+podman cp <host_path> <container>:<container_path>
+
+# Start, stop or restart a container
+podman <action> <container>
+
+# Remove a stopped container; -f kills a running one first
+podman rm <container>
+
+# Remove an image
+podman rmi <image>
+
+# Pull an image from a registry
+podman pull <image>
+
+# Build an image from the Containerfile in the current directory
+podman build -t <name> .
+
+# Reclaim space: remove stopped containers and dangling images
+podman system prune
+
+# Reclaim everything unused, including volumes and all unused images
+podman system prune -a --volumes
+
+; podman here is rootless, so no doas and published ports under 1024 need
+; net.ipv4.ip_unprivileged_port_start lowered or a >=1024 host port
+;
+; inspect --format takes a Go template over the JSON, e.g.
+; '{{.State.Status}}' or '{{range .NetworkSettings.Ports}}{{.}}{{end}}'
+
+$ container: podman ps -a --format "{{.Names}}"
+$ image: podman images --format "{{.Repository}}:{{.Tag}}" | grep -v '<none>'
+$ action: printf 'start\nstop\nrestart\n'
+$ shell: printf 'bash\nsh\n'
