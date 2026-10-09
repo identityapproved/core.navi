@@ -1,0 +1,137 @@
+% rsync, copy, local, mirror
+
+# Copy the contents of a directory locally
+rsync -ahP <source>/ <target>/
+
+# Copy a directory into another as a subdir
+rsync -ahP <source> <target>/
+
+# Mirror a directory locally, deleting extras
+rsync -ah --delete <source>/ <target>/
+
+# Dry run a local copy, itemising changes
+rsync -ahn --itemize-changes --delete <source>/ <target>/
+
+# Move files locally, deleting each source file
+rsync -ah --remove-source-files <source>/ <target>/
+
+# Move a tree locally, pruning the emptied dirs
+rsync -ah --remove-source-files <source>/ <target>/ && find <source>/ -mindepth 1 -type d -empty -delete
+
+# Copy locally, skipping what the target has
+rsync -ah --ignore-existing <source>/ <target>/
+
+# Copy locally, skipping newer target files
+rsync -ahu <source>/ <target>/
+
+# Refresh target files only, add nothing new
+rsync -ah --existing <source>/ <target>/
+
+# Copy a file, creating parent directories
+rsync -ah --mkpath <file> <target>/
+
+# Copy locally, excluding a pattern
+rsync -ah --exclude='<pattern>' <source>/ <target>/
+
+# Copy locally, obeying .gitignore files
+rsync -ah --filter=':- .gitignore' <source>/ <target>/
+
+# Copy locally, excluding from a file
+rsync -ah --exclude-from=<exclude_file> <source>/ <target>/
+
+# Copy locally, only files under a size
+rsync -ah --max-size=<size> <source>/ <target>/
+
+# Copy locally, following symlinks
+rsync -ahL <source>/ <target>/
+
+# Compare two local trees by checksum
+rsync -ahn --checksum --itemize-changes --delete <source>/ <target>/
+
+# Snapshot backup, hardlinked to the last one
+rsync -ah --delete --link-dest=<previous> <source>/ <target>/
+
+# Copy locally, backing up what it replaces
+rsync -ah --delete --backup --backup-dir=<backup_dir> <source>/ <target>/
+
+# Copy only the paths listed in a file
+rsync -ah --files-from=<list_file> <source>/ <target>/
+
+# Copy locally and print transfer stats
+rsync -ah --stats <source>/ <target>/
+
+; a trailing slash on the source means "the contents of", no slash means "the
+; directory itself" - <source>/ <target>/ is the form that does not nest
+;
+; -a is -rlptgoD: recurse, symlinks, perms, times, group, owner, devices and
+; specials. Owner and group only stick when the run is root
+;
+; -P is --partial --progress; for one summary line instead of per-file output
+; see --info=progress2 in the remote sheet
+;
+; --delete needs a recursive transfer and acts on the target only; run the dry
+; run itemise line first, the deletion is not recoverable
+;
+; --remove-source-files is a copy-then-unlink per file: a file is removed only
+; after it transferred and verified, so an interrupted run is safe to repeat.
+; It never removes the directories the files sat in, hence the find prune line.
+; On one filesystem mv is instant and atomic; rsync earns its keep across
+; filesystems, or when the transfer needs resuming
+;
+; --link-dest is resolved relative to <target> when it is not absolute, and the
+; files must match on every preserved attribute to be linked rather than copied
+;
+; a local transfer copies whole files by default: the delta algorithm saves
+; nothing when both sides are on this host
+;
+; keep the distinctive words in the first 45 characters of a description: the
+; match line is cut to the terminal width, so a tail past that is unreachable
+; from the ^G best-match path in an 80-100 column terminal, and always is when
+; navi runs without a tty (measured: 45 chars at 80 cols, 80 chars at 200)
+;
+; --filter=':- .gitignore' reads each .gitignore as exclude patterns only, so
+; git's own negation, anchoring and ** semantics do not carry over
+
+$ size: printf '1M\n10M\n100M\n1G\n'
+
+% rsync, remote, ssh, push, pull
+
+# Push a directory to a remote host
+rsync -ahP <local_path>/ <host>:<remote_path>/
+
+# Pull a directory from a remote host
+rsync -ahP <host>:<remote_path>/ <local_path>/
+
+# Push to a remote host and mirror it
+rsync -ah --delete <local_path>/ <host>:<remote_path>/
+
+# Dry run a remote sync, itemising changes
+rsync -ahn --itemize-changes --delete <local_path>/ <host>:<remote_path>/
+
+# Push a big tree, compressed, resumable
+rsync -ahz --partial --info=progress2 <local_path>/ <host>:<remote_path>/
+
+# Push over a non-default ssh port
+rsync -ahP -e 'ssh -p <port>' <local_path>/ <host>:<remote_path>/
+
+# Push with the bandwidth capped
+rsync -ahP --bwlimit=<rate> <local_path>/ <host>:<remote_path>/
+
+# Push to a remote path that needs root
+rsync -ahP --rsync-path='doas rsync' <local_path>/ <host>:<remote_path>/
+
+# List a remote directory, transfer nothing
+rsync -ah --list-only <host>:<remote_path>/
+
+; rsync runs itself over ssh on the far side, so it has to be installed there
+; too, and --rsync-path='doas rsync' needs a passwordless doas rule for it
+;
+; a bare <remote_path> is relative to the remote login's home; start it with /
+; for an absolute path
+;
+; -z is worth it on a slow link only; over LAN it costs more CPU than it saves
+;
+; --bwlimit is KiB/s unless suffixed, and is rounded to whole KiB
+
+$ host: awk '$1 ~ /^[Hh]ost$/ { for (i = 2; i <= NF; i++) if ($i !~ /[*?]/) print $i }' "$HOME/.ssh/config" 2>/dev/null
+$ rate: printf '500k\n1m\n5m\n10m\n'
