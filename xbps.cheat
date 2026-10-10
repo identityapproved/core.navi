@@ -1,0 +1,36 @@
+% xbps, void, pkg
+
+# Install an xbps package, syncing the repodata first
+doas xbps-install -S <package>
+
+# Full system update
+doas xbps-install -Syu
+
+# Update xbps itself before the rest of the system
+doas xbps-install -Syu xbps
+
+# Remove an xbps package and the dependencies nothing else needs
+doas xbps-remove -R <package>
+
+# Search the remote repositories by name and description
+xbps-query -Rs <pattern>
+
+# List local packages matching a pattern
+xbps-query -l | grep -i <pattern>
+
+# Remove orphaned xbps packages
+doas xbps-remove -o
+
+# Clean the xbps package cache
+doas xbps-remove -O
+
+; The seven snippets above were the xi/xu/xr/xs/xl/xo/xc aliases in lainland
+; dot_aliases and are the ones actually in use. The "-Syu xbps" two-step is
+; upstream's documented order -- a new repodata resolved by an old xbps is how
+; a Void update strands itself halfway -- and it is what
+; __system_update(1) runs first.
+;
+; No "$ package:" suggestion line on purpose: xbps-query -l prints
+; "ii <pkgname-version> <description>", and stripping the version off column 2
+; has not been verified against a real Void host, so the name is typed rather
+; than picked.

@@ -1,0 +1,28 @@
+% runit, void, sv
+
+# Status of a runit service
+doas sv status <service>
+
+# Bring a runit service up
+doas sv up <service>
+
+# Take a runit service down
+doas sv down <service>
+
+# Restart a runit service
+doas sv restart <service>
+
+# Status of every enabled runit service
+doas sv status /var/service/*
+
+# Enable a runit service, linking it into the active set
+doas ln -s /etc/sv/<service> /var/service/
+
+# Disable a runit service, removing only the link
+doas rm /var/service/<service>
+
+; The four single-service snippets were the svs/svu/svd/svr aliases in lainland
+; dot_aliases. Enabling is a symlink from /etc/sv into /var/service and
+; disabling removes that link, never the definition in /etc/sv.
+
+$ service: ls /etc/sv

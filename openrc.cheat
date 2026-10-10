@@ -1,0 +1,40 @@
+% openrc, gentoo, rc-service
+
+# OpenRC service status for the active runlevel
+rc-status
+
+# OpenRC status of every service, all runlevels
+rc-status -s
+
+# OpenRC services started but in no runlevel
+rc-status -u
+
+# Crashed OpenRC services, empty when all is well
+rc-status -c
+
+# List the OpenRC runlevels
+rc-status -l
+
+# Status of one OpenRC service
+rc-service <service> status
+
+# Start, stop or restart an OpenRC service
+rc-service <service> <action>
+
+# OpenRC services enabled per runlevel
+rc-update show
+
+# Enable an OpenRC service in a runlevel
+doas rc-update add <service> <runlevel>
+
+# Disable an OpenRC service in a runlevel
+doas rc-update del <service> <runlevel>
+
+; rc-status and its -s/-u/-c/-l forms were run on this host; the column layout
+; the "$ service:" line below parses is theirs. rc-service and rc-update are
+; the host's documented service tooling but were not executed here, so the
+; flags come from their man pages rather than from a run.
+
+$ service: rc-status -s | awk '{print $1}'
+$ runlevel: rc-status -l
+$ action: printf 'start\nstop\nrestart\n'

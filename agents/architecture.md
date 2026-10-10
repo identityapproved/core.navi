@@ -6,8 +6,8 @@ dependency graph.
 ## Layout
 
 - `*.cheat` at the repository root: one file per topic (`disk`, `incus`,
-  `media`, `nb`, `netspeed`, `podman`, `portage`, `taskwarrior`, `virsh`,
-  `wayland`).
+  `media`, `nb`, `netspeed`, `openrc`, `podman`, `portage`, `runit`, `rsync`,
+  `systemd`, `taskwarrior`, `virsh`, `wayland`, `xbps`).
 - `README.md`: repository purpose.
 - `agents/`: this file and `rules.md`, nothing else.
 - `.githooks/pre-commit`: path sanitizer.

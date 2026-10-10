@@ -1,0 +1,50 @@
+% systemd, systemctl, journalctl
+
+# Status of a systemd service
+systemctl status <service>
+
+# Start, stop, restart or reload a systemd service
+doas systemctl <action> <service>
+
+# Enable a systemd service and start it now
+doas systemctl enable --now <service>
+
+# Disable a systemd service and stop it now
+doas systemctl disable --now <service>
+
+# Whether a systemd service is enabled at boot
+systemctl is-enabled <service>
+
+# Running systemd services
+systemctl list-units --type=service --state=running
+
+# Every installed systemd service unit and its enablement
+systemctl list-unit-files --type=service
+
+# Reload unit files after editing one
+doas systemctl daemon-reload
+
+# Units that failed this boot
+systemctl --failed
+
+# Follow one service's log
+journalctl -u <service> -f
+
+# Errors and worse from this boot
+journalctl -b -p err
+
+# What took the longest at boot
+systemd-analyze blame
+
+# Same for a user unit, no privileges needed
+systemctl --user <action> <service>
+
+; Nothing in this file was run: neither of these hosts uses systemd (Gentoo on
+; OpenRC, Void on runit), so these are from systemctl(1) and journalctl(1) and
+; are here for a systemd host elsewhere. For this machine, see openrc.cheat;
+; for the laptop, runit.cheat.
+;
+; No "$ service:" suggestion line, since the listing it would parse cannot be
+; run here.
+
+$ action: printf 'start\nstop\nrestart\nreload\n'
