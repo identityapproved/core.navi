@@ -27,8 +27,7 @@ doas xbps-remove -O
 ; The seven snippets above were the xi/xu/xr/xs/xl/xo/xc aliases in lainland
 ; dot_aliases and are the ones actually in use. The "-Syu xbps" two-step is
 ; upstream's documented order -- a new repodata resolved by an old xbps is how
-; a Void update strands itself halfway -- and it is what
-; __system_update(1) runs first.
+; a Void update strands itself halfway.
 ;
 ; No "$ package:" suggestion line on purpose: xbps-query -l prints
 ; "ii <pkgname-version> <description>", and stripping the version off column 2

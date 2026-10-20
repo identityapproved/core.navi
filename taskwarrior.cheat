@@ -96,12 +96,6 @@ task <id> annotate "<desc>"
 # Drop an annotation by its exact text
 task <id> denotate "<desc>"
 
-# Open a task's note in the editor
-__twopen <id>
-
-# Pick any task note from a picker
-__twopen
-
 # Tasks in one project
 task project:<project> list
 
