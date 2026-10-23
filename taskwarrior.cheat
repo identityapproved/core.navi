@@ -27,6 +27,9 @@ task rc.report.<report>.filter= <report>
 # Reports that exist, and the filter each one applies
 task reports
 
+# Sort a report by id for one run, or by any column: id+ ascending, id- descending
+task rc.report.<report>.sort=<sort> <report>
+
 # Store totals and per-status counts
 task stats
 
@@ -185,3 +188,4 @@ $ note: cd $HOME/taskwarrior/tasks && find . -name '*.md' -printf '%P\n' | sort
 $ file: ls -1 $HOME/taskwarrior/task-backup-*.json 2>/dev/null | sort -r
 $ date: printf 'today\ntomorrow\neow\neom\neoy\nsomeday\n'
 $ priority: printf 'H\nM\nL\n'
+$ sort: printf 'id+\nid-\nurgency-\ndue+\nproject+,id+\nentry-\n'
