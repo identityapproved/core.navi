@@ -1,0 +1,49 @@
+% uv, python, venv
+
+# uv new python project in a new directory
+uv init <name>
+
+# uv new single-file script with inline deps header
+uv init --script <file>
+
+# uv run script with no project, no venv
+uv run --no-project <file>
+
+# uv run command inside the project venv
+uv run <cmd>
+
+# uv create venv in .venv
+uv venv
+
+# uv lock project dependencies
+uv lock
+
+# uv dependency tree of the project
+uv tree
+
+# uv list packages in the venv
+uv pip list
+
+# uv python interpreters it can see
+uv python list --only-installed
+
+# uv installed tools
+uv tool list
+
+# uv cache location
+uv cache dir
+
+; Network commands below: syntax from uv --help, not run on this host.
+# uv add dependency to project
+uv add <package>
+
+# uv add dev dependency to project
+uv add --dev <package>
+
+# uv sync venv to lockfile
+uv sync
+
+# uvx run tool ephemerally, no install
+uvx <tool>
+
+$ cmd: printf 'python\npytest\nruff check\n'
