@@ -15,6 +15,9 @@ steam steam://open/games
 # Quit Steam completely, tray and webhelpers included
 steam -shutdown
 
+# Kill Steam and steamwebhelper, force fully closed
+steam -shutdown; sleep <seconds>; pkill steamwebhelper
+
 # Is Steam still running in the background
 pgrep -a -f 'steamwebhelper|ubuntu12_32/steam '
 
@@ -33,6 +36,11 @@ swaymsg -t subscribe -m '["window"]' | jq -c 'select(.change=="new") | {app_id: 
 ; Verified on Void with Steam 1.0.0.87: the SteamAppId direct launch (hackmud,
 ; Steamworks game - still needs the client running for its session ticket), the
 ; pgrep check, the window subscriber, and all three suggestion commands.
+; Full close: a plain kill on the tree does not work, the client survives TERM
+; and respawns every webhelper. Shut the client down first, then pkill the
+; leftover webhelpers. Verified: no Steam process left afterwards. A game
+; launched directly keeps running, and hackmud stays playable without Steam
+; once its session is up - Steam is only needed at launch.
 ; Not yet run here: -silent, -cef-disable-gpu, -shutdown, steam://open/games,
 ; steam://rungameid. steamcmd is not installed on this host, so that snippet is
 ; unverified too. Proton games cannot use the direct launch; use rungameid.
@@ -41,3 +49,4 @@ $ appid: awk -F'"' '/"path"/{print $4}' ~/.local/share/Steam/steamapps/libraryfo
 $ gamedir: awk -F'"' '/"path"/{print $4}' ~/.local/share/Steam/steamapps/libraryfolders.vdf | while IFS= read -r d; do for g in "$d"/steamapps/common/*/; do [ -d "$g" ] && printf '%s\n' "${g%/}"; done; done | grep -v SteamLinuxRuntime
 $ binary: find "$gamedir" -maxdepth 1 -type f -executable \( -name '*.x86_64' -o -name '*.sh' -o ! -name '*.*' \) -printf '%f\n'
 $ platform: printf 'linux\nwindows\n'
+$ seconds: printf '5\n10\n3\n'

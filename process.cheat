@@ -1,0 +1,64 @@
+% process, kill, signal
+
+# Preview processes matching a name before killing
+pgrep -a <name>
+
+# Preview full command line matches before killing
+pgrep -af '<pattern>'
+
+# Stop processes by name, graceful TERM
+pkill <name>
+
+# Stop processes by full command line pattern
+pkill -f '<pattern>'
+
+# Force kill processes by name, SIGKILL
+pkill -9 <name>
+
+# Graceful stop then force kill by name after a wait
+pkill <name>; sleep <seconds>; pkill -9 <name>
+
+# Stop one process by pid, graceful TERM
+kill <pid>
+
+# Force kill one process by pid, SIGKILL
+kill -9 <pid>
+
+# Freeze or pause a pid, SIGSTOP
+kill -STOP <pid>
+
+# Unfreeze or resume a pid, SIGCONT
+kill -CONT <pid>
+
+# Kill all children of a parent pid
+pkill -P <pid>
+
+# Kill a whole process group by pgid
+kill -- -<pgid>
+
+# Kill whatever listens on a TCP port
+lsof -t -iTCP:<port> -sTCP:LISTEN | xargs -r kill
+
+# Run a command with a time limit, killed after it
+timeout <seconds> <command>
+
+# Close a sway window by app_id or class
+swaymsg '[app_id="^<app_id>$"] kill'
+
+# Is the process gone after the kill
+pgrep -a <name> || echo gone
+
+; All verified on Void (procps-ng 4.0.6) against a throwaway sleep copy; the
+; graceful-then-force line killed a process that ignores TERM. killall and fuser
+; are not installed here, hence pkill and lsof. pgrep/pkill match the comm name,
+; which the kernel truncates to 15 chars (hackmud_lin.x86_64 -> hackmud_lin.x86);
+; use -f for longer names. A -f pattern also matches any shell whose own command
+; line contains it (zsh -c, scripts); write it as '[f]oo' to avoid self-matching.
+; For an X11 window swap app_id for class in the sway criteria.
+
+$ name: ps -u "$USER" -o comm= | sort -u
+$ pid: ps -eo pid,%cpu,comm,args --sort=-%cpu | cut -c1-150 --- --column 1 --header-lines 1
+$ pgid: ps -eo pgid,comm --sort=pgid | awk '!s[$1]++' --- --column 1 --header-lines 1
+$ port: ss -ltnH | awk '{print $4}' | sed 's/.*://' | sort -un
+$ app_id: swaymsg -t get_tree | jq -r '.. | objects | select(.type? == "con" or .type? == "floating_con") | select(.pid?) | (.app_id // .window_properties.class)' | sort -u
+$ seconds: printf '5\n10\n3\n'
