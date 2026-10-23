@@ -1,0 +1,43 @@
+% steam, gaming
+
+# Start Steam with its window
+steam >/dev/null 2>&1 &!
+
+# Start Steam silent in the tray, no window
+steam -silent >/dev/null 2>&1 &!
+
+# Steam tray start with GPU off, weak Intel graphics
+steam -silent -cef-disable-gpu >/dev/null 2>&1 &!
+
+# Open the Steam library window from the tray
+steam steam://open/games
+
+# Quit Steam completely, tray and webhelpers included
+steam -shutdown
+
+# Is Steam still running in the background
+pgrep -a -f 'steamwebhelper|ubuntu12_32/steam '
+
+# Launch a Steam game by app id through the client, no window
+steam steam://rungameid/<appid>
+
+# Launch a native Steam game binary directly while Steam sits in the tray
+cd <gamedir> && SteamAppId=<appid> ./<binary>
+
+# Download a Steam game with steamcmd, no client GUI
+steamcmd +@sSteamCmdForcePlatformType <platform> +login <user> +app_update <appid> validate +quit
+
+# Sway workspace rules: app_id and class of new windows
+swaymsg -t subscribe -m '["window"]' | jq -c 'select(.change=="new") | {app_id: .container.app_id, class: .container.window_properties.class, pid: .container.pid}'
+
+; Verified on Void with Steam 1.0.0.87: the SteamAppId direct launch (hackmud,
+; Steamworks game - still needs the client running for its session ticket), the
+; pgrep check, the window subscriber, and all three suggestion commands.
+; Not yet run here: -silent, -cef-disable-gpu, -shutdown, steam://open/games,
+; steam://rungameid. steamcmd is not installed on this host, so that snippet is
+; unverified too. Proton games cannot use the direct launch; use rungameid.
+
+$ appid: awk -F'"' '/"path"/{print $4}' ~/.local/share/Steam/steamapps/libraryfolders.vdf | while IFS= read -r d; do for f in "$d"/steamapps/appmanifest_*.acf; do [ -e "$f" ] && awk -F'"' '/"appid"/{a=$4} /"name"/{n=$4} END{print a"  "n}' "$f"; done; done | grep -v 'Steam Linux Runtime' --- --column 1
+$ gamedir: awk -F'"' '/"path"/{print $4}' ~/.local/share/Steam/steamapps/libraryfolders.vdf | while IFS= read -r d; do for g in "$d"/steamapps/common/*/; do [ -d "$g" ] && printf '%s\n' "${g%/}"; done; done | grep -v SteamLinuxRuntime
+$ binary: find "$gamedir" -maxdepth 1 -type f -executable \( -name '*.x86_64' -o -name '*.sh' -o ! -name '*.*' \) -printf '%f\n'
+$ platform: printf 'linux\nwindows\n'
