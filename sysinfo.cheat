@@ -1,0 +1,43 @@
+% sysinfo, system, hardware
+
+# Distro name and version
+cat /etc/os-release
+
+# Kernel release version
+uname -r
+
+# Kernel, hostname, arch and build, all at once
+uname -a
+
+# Kernel build info and compiler version
+cat /proc/version
+
+# Uptime and load averages
+uptime
+
+# CPU model, cores, threads and flags
+lscpu
+
+# CPU per-core topology and current MHz
+lscpu -e
+
+# CPU min, max and scaling frequency
+lscpu | grep -i mhz
+
+# Number of CPU threads available
+nproc
+
+# RAM and swap summary, human readable
+free -h
+
+# Total and available RAM plus swap from meminfo
+grep -E 'MemTotal|MemAvailable|SwapTotal' /proc/meminfo
+
+# PCI devices
+lspci
+
+# GPU model and subsystem
+lspci -v | grep -A1 -e VGA -e 3D
+
+# USB devices
+lsusb
