@@ -6,7 +6,7 @@ dependency graph.
 ## Layout
 
 - `*.cheat` at the repository root: one file per topic (`disk`, `incus`,
-  `media`, `nb`, `netspeed`, `openrc`, `podman`, `portage`, `runit`, `rsync`,
+  `log`, `media`, `nb`, `netspeed`, `openrc`, `podman`, `portage`, `runit`, `rsync`,
   `systemd`, `taskwarrior`, `virsh`, `wayland`, `xbps`).
 - `README.md`: repository purpose.
 - `agents/`: this file and `rules.md`, nothing else.

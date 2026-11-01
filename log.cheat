@@ -1,0 +1,41 @@
+% log, void, socklog
+
+# Follow all socklog logs live, void syslog
+svlogtail
+
+# Follow one socklog log with its history, e.g. secure for auth/doas/elogind
+svlogtail <socklog>
+
+# Search one socklog log including rotated files
+cat /var/log/socklog/<socklog>/*.[us] /var/log/socklog/<socklog>/current | grep -i <pattern>
+
+# Socklog lines since this boot only
+awk -v b="$(date -u -d @$(( $(date +%s) - $(cut -d. -f1 /proc/uptime) )) +%FT%T)" '$1 >= b' /var/log/socklog/<socklog>/current
+
+# Kernel errors and warnings from socklog, no root needed, skip firewall drops
+grep -E 'kern\.(err|warn)' /var/log/socklog/kernel/current | grep -v nft-
+
+; socklog-unix + nanoklogd under runit; the user must be in the socklog group.
+; Timestamps are UTC (TAI64 stamps converted by svlogd), so the since-boot
+; filter builds its cutoff in UTC. Auth lines go to secure, not auth.
+; Verified on voidbox 2026-11-01.
+
+$ socklog: ls /var/log/socklog
+
+% log, gentoo, sysklogd
+
+# Kernel errors and warnings with readable times, root needed
+doas dmesg --level=err,warn -T
+
+# Follow sysklogd system log, gentoo syslog
+doas tail -F /var/log/messages
+
+# Follow sysklogd auth log, gentoo doas/login
+doas tail -F /var/log/auth.log
+
+# OpenRC boot and shutdown log
+doas less +G /var/log/rc.log
+
+; g33nto: app-admin/sysklogd writes /var/log/{messages,syslog,auth.log,kern.log};
+; rc.log needs rc_logger="YES" in /etc/rc.conf. Taken from the 2026-10-27 g33nto
+; session notes, not re-run from voidbox.
