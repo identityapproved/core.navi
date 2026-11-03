@@ -18,7 +18,7 @@ grep -E 'kern\.(err|warn)' /var/log/socklog/kernel/current | grep -v nft-
 ; socklog-unix + nanoklogd under runit; the user must be in the socklog group.
 ; Timestamps are UTC (TAI64 stamps converted by svlogd), so the since-boot
 ; filter builds its cutoff in UTC. Auth lines go to secure, not auth.
-; Verified on voidbox 2026-11-01.
+; Verified on the Void laptop 2026-11-01.
 
 $ socklog: ls /var/log/socklog
 
@@ -38,4 +38,4 @@ doas less +G /var/log/rc.log
 
 ; g33nto: app-admin/sysklogd writes /var/log/{messages,syslog,auth.log,kern.log};
 ; rc.log needs rc_logger="YES" in /etc/rc.conf. Taken from the 2026-10-27 g33nto
-; session notes, not re-run from voidbox.
+; session notes, not re-run on the Void laptop.

@@ -33,7 +33,7 @@ steamcmd +@sSteamCmdForcePlatformType <platform> +login <user> +app_update <appi
 # Sway workspace rules: app_id and class of new windows
 swaymsg -t subscribe -m '["window"]' | jq -c 'select(.change=="new") | {app_id: .container.app_id, class: .container.window_properties.class, pid: .container.pid}'
 
-; Verified on Void with Steam 1.0.0.87: the SteamAppId direct launch (hackmud,
+; Verified on Void with Steam 1.0.0.87 (sanitizer:allow, a version): the SteamAppId direct launch (hackmud,
 ; Steamworks game - still needs the client running for its session ticket), the
 ; pgrep check, the window subscriber, and all three suggestion commands.
 ; Full close: a plain kill on the tree does not work, the client survives TERM
